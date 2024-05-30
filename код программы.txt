@@ -1,0 +1,489 @@
+Класс подключения базы данных
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Data.SqlClient;
+
+namespace WindowsFormsApp1
+{
+    class DataBase
+    {
+        SqlConnection sqlConnection = new SqlConnection(@"Data Source=DESKTOP-IM1GQ6J\SQLEXPRESS; Initial Catalog=students;Integrated Security=True");
+
+        public void openConnection()
+        {
+            if (sqlConnection.State == System.Data.ConnectionState.Closed)
+            {
+                sqlConnection.Open();
+            }
+
+        }
+
+        public void closeConnection()
+        {
+            if (sqlConnection.State == System.Data.ConnectionState.Open)
+            {
+                sqlConnection.Close();
+            }
+
+        }
+
+        public SqlConnection GetConnection()
+        {
+            return sqlConnection;
+        }
+    }
+}
+Листинг кода «Registration»
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.SqlClient;
+
+namespace WindowsFormsApp1
+{
+    public partial class Registr : Form
+    {
+        DataBase dataBase = new DataBase();
+        public Registr()
+        {
+            InitializeComponent();
+        }
+
+        private void Form2_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            var login = textBox1.Text;
+            var password = textBox2.Text;
+
+            string querystring = $"insert into Register(login, password) values ('{login}','{password}')";
+            SqlCommand command = new SqlCommand(querystring, dataBase.GetConnection());
+
+            dataBase.openConnection();
+
+            if (command.ExecuteNonQuery() == 1)
+            {
+                MessageBox.Show("Аккаунт успешно создан", "Успех");
+                Login frm_login = new Login();
+                this.Hide();
+                frm_login.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Аккаунт не создан");
+            }
+            dataBase.closeConnection();
+        }
+        private Boolean checkuser()
+        {
+            var loginUser = textBox1.Text;
+            var password = textBox2.Text;
+
+            SqlDataAdapter adapter = new SqlDataAdapter();
+            DataTable table = new DataTable();
+            string querystring = $"select userid,login, password from Register where login = '(loginUser)' and password = '(password)'";
+
+            SqlCommand command = new SqlCommand(querystring, dataBase.GetConnection());
+
+            adapter.SelectCommand = command;
+            adapter.Fill(table);
+
+            if (table.Rows.Count > 0)
+            {
+                MessageBox.Show("Пользователь уже существует");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+}
+Листинг кода «login»
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.SqlClient;
+
+namespace WindowsFormsApp1
+{
+    public partial class Login : Form
+    {
+        DataBase dataBase = new DataBase();
+        public Login()
+        {
+            InitializeComponent();
+            this.StartPosition = FormStartPosition.CenterScreen;
+            textBox1.TabStop = false;
+            textBox2.TabStop = false;
+
+            textBox1.GotFocus += textBox1_GotFocus;
+            textBox1.LostFocus += textBox1_LostFocus;
+            textBox2.GotFocus += textBox2_GotFocus;
+            textBox2.LostFocus += textBox2_LostFocus;
+
+            textBox1.Text = "Логин";
+            textBox2.Text = "Пароль";
+            textBox2.PasswordChar = '*';
+        }
+        private void textBox1_GotFocus(object sender, EventArgs e)
+        {
+            if (textBox1.Text == "Логин")
+            {
+                textBox1.Text = "";
+            }
+        }
+        private void textBox1_LostFocus(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(textBox1.Text))
+            {
+                textBox1.Text = "Логин";
+            }
+        }
+
+        private void textBox2_GotFocus(object sender, EventArgs e)
+        {
+            if (textBox2.Text == "Пароль")
+            {
+                textBox2.Text = "";
+            }
+        }
+        private void textBox2_LostFocus(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(textBox2.Text))
+            {
+                textBox2.Text = "Пароль";
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var login = textBox1.Text;
+            var password = textBox2.Text;
+
+            SqlDataAdapter adapter = new SqlDataAdapter();
+            DataTable table = new DataTable();
+
+            string querystring = $"select userid, login, password from Register where login = '{login}' and password = '{password}'";
+
+            SqlCommand command = new SqlCommand(querystring, dataBase.GetConnection());
+
+            adapter.SelectCommand = command;
+            adapter.Fill(table);
+
+            if (table.Rows.Count == 1)
+            {
+                MainForm form3 = new MainForm();
+                form3.Show();
+                this.Hide();
+
+            }
+            else
+            {
+                MessageBox.Show("Такого аккаунта не существует");
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Registr registr = new Registr();
+            registr.Show();
+            this.Hide();
+        }
+    }
+}
+Листинг кода «MainForm»
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace WindowsFormsApp1
+{
+    public partial class MainForm : Form
+    {
+        public MainForm()
+        {
+            InitializeComponent();
+        }
+
+        private void Form3_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ПредприятияProgr form4 = new ПредприятияProgr();
+            form4.Show();
+            this.Hide();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            ПредприятияVr form5 = new ПредприятияVr();
+            form5.Show();
+            this.Hide();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            ПредприятияUr form6 = new ПредприятияUr();
+            form6.Show();
+            this.Hide();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
+
+Листинг кода «ПредпрProg»
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace WindowsFormsApp1
+{
+    public partial class ПредприятияProgr : Form
+    {
+        public ПредприятияProgr()
+        {
+            InitializeComponent();
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void pictureBox2_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void pictureBox4_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void pictureBox5_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void pictureBox6_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+    }
+}
+Листинг кода «ПредпрVr»
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace WindowsFormsApp1
+{
+    public partial class ПредприятияVr : Form
+    {
+        public ПредприятияVr()
+        {
+            InitializeComponent();
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void pictureBox2_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
+Листинг кода «ПредпрUr»
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace WindowsFormsApp1
+{
+    public partial class ПредприятияUr : Form
+    {
+        public ПредприятияUr()
+        {
+            InitializeComponent();
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void pictureBox2_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+
+        private void pictureBox4_Click(object sender, EventArgs e)
+        {
+            Заявка form7 = new Заявка();
+            form7.Show();
+            this.Hide();
+        }
+    }
+}
+Листинг кода «Заявки»
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace WindowsFormsApp1
+{
+    public partial class Заявка : Form
+    {
+        public Заявка()
+        {
+            InitializeComponent();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Form8 form8 = new Form8();
+            form8.Show();
+            this.Hide();
+        }
+    }
+}
+Листинг кода «Обратная связь»
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace WindowsFormsApp1
+{
+    public partial class Form8 : Form
+    {
+        public Form8()
+        {
+            InitializeComponent();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            MainForm form3 = new MainForm();
+            form3.Show();
+            this.Hide();
+        }
+    }
+}
+
